@@ -1,0 +1,85 @@
+plugins {
+    id 'java'
+    id 'java-library'
+    id 'io.gatling.gradle' version '3.10.5.1'
+}
+
+group = 'com.linkinben'
+version = '1.0.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+    maven {
+        url "https://packages.confluent.io/maven"
+    }
+}
+
+tasks.register('runLoadTest', JavaExec) {
+    description = "CI Performance-Test"
+    environment = Map.of("GATLING_HOME", workingDir)
+    systemProperties = System.getProperties() as Map<String, ?>
+    classpath = sourceSets.test.runtimeClasspath
+    getMainClass().set "io.gatling.app.Gatling"
+    arg = Eval.me("['rd', '${reportDescription}' , '-s', ${simulation}']")
+}
+
+configurations {
+    jaxb
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+dependencies {
+    jaxb "javax.xml.bind:jaxb-api:2.3.1"
+    jaxb "com.sun.xml.bind:jaxb-core:2.3.0.1"
+    jaxb "com.sun.xml.bind:jaxb-xjc:2.3.2"
+    jaxb "com.sun.xml.bind:jaxb-impl:2.3.2"
+    jaxb "com.sun.xml.bind:jaxb-osgi:2.3.2"
+
+    implementation(
+            "org.springframework.boot:spring-boot-starter:3.2.7",
+            "org.springframework.boot:spring-boot-starter-actuator:3.2.7",
+            "org.springframework.boot:spring-boot-starter-webflux:3.2.7",
+            "org.springframework.boot:spring-boot-starter-web:3.2.7",
+            "org.springframework:spring-oxm:5.3.31",
+            "org.hibernate.validator:hibernate-validator:6.1.5.Final",
+
+            "org.springframework.kafka:spring-kafka:3.2.0",
+            "org.apache.kafka:kafka-streams:3.2.0",
+
+            "com.linkinben.gatling:gatling-java-learning:1.0.0-SNAPSHOT",
+            "io.gatling:gatling-app:3.9.5",
+            "io.gatling:gatling-core-java:3.9.5",
+            "io.gatling.highcharts:gatling-charts-highcharts:3.9.5",
+            "io.vavr:vavr:0.10.0",
+            "org.scala-lang:scala-compiler:2.13.9",
+            "org.scala-lang:scala-library:2.13.9",
+            "org.scala-lang:scala-library:2.13.9",
+
+            // Scenario clients
+            "org.asynchttpclient:async-http-client:2.12.3",
+            "com.ibm.mq:com.ibm.mq.allclient:9.2.4.0",
+            "org.apache.kafka:kafka-clients:3.7.0",
+            "io.confluent:kafka-streams-avro-serde:5.5.5",
+            "org.apache.avro:avro:1.11.3",
+            "org.apache.httpcomponents:httpclient:4.5.13",
+            "commons-io:commons-io:2.15.1",
+            "commons-io:commons-io:2.15.1",
+
+            // Jabx
+            "javax.xml.bind:jaxb-api:2.3.1",
+            "com.sun.xml.bind:jaxb-core:2.3.0.1",
+            "com.sun.xml.bind:jaxb-xjc:2.3.2",
+            "com.sun.xml.bind:jaxb-impl:2.3.2",
+            "com.sun.xml.bind:jaxb-osgi:2.3.2",
+            "jakarta.xml.bind:jakarta.xml.bind-api:4.0.0",
+            "org.glassfish.jaxb:jaxb-runtime:2.3.6"
+    )
+
+    compileOnly("org.projectlombok:lombok:1.18.24")
+    annotationProcessor("org.projectlombok:lombok:1.18.24")
+}
