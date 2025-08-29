@@ -1,17 +1,96 @@
 package com.linkinben;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-public class Main {
-    public static void main(String[] args) {
-        //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-        // to see how IntelliJ IDEA suggests fixing it.
-        System.out.printf("Hello and welcome!");
+import com.linkinben.gatling.AbstractAsyncScenario;
+import com.linkinben.gatling.config.TestPlanLoader;
+import com.linkinben.gatling.integrations.base.BaseReceiver;
+import com.linkinben.gatling.integrations.base.BaseSender;
+import com.linkinben.gatling.integrations.kafka.ConcreteKafkaProducer;
+import com.linkinben.gatling.integrations.kafka.KeyAndValuesKafkaConsumer;
+import com.linkinben.gatling.model.ExecutionConfiguration;
+import com.linkinben.gatling.simulation.BaseSimulation;
+import com.linkinben.scenarios.ScenarioFactory;
+import com.typesafe.config.Config;
+import io.gatling.javaapi.core.Assertion;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
-        for (int i = 1; i <= 5; i++) {
-            //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-            // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-            System.out.println("i = " + i);
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import static io.gatling.javaapi.core.CoreDsl.details;
+import static io.gatling.javaapi.core.CoreDsl.global;
+
+
+@Slf4j
+public class SecuritySimulation extends BaseSimulation {
+    private ConcreteKafkaProducer<String, String> producer;
+    private KeyAndValuesKafkaConsumer<String, String> consumer;
+    private TestPlanLoader<ExecutionConfiguration> testPlanLoader;
+
+    public SecuritySimulation() throws Exception {
+        testPlanLoader = new TestPlanLoader<>(ExecutionConfiguration.class);
+        producer = new ConcreteKafkaProducer<>(config.getKafkaConsumerProperties());
+        consumer = new KeyAndValuesKafkaConsumer<>(List.of(config.getKafkaTopic("input")), config.getKafkaConsumerProperties());
+
+        var simulation = setUp(getScenario());
+
+        if (config.isWarmup()) {
+            simulation.assertions(
+                    global().successfulRequests().percent().gt(90D)
+            );
+        } else {
+            simulation.assertions(
+                    addAssertions()
+            );
         }
+    }
+
+    private List<Assertion> getSuccessAssertions(Config environmentConfig) {
+        log.info("Environment config={}", environmentConfig);
+        var assertions = new ArrayList<Assertion>();
+        assertions.add(global().successfulRequests().percent().is(100D));
+
+
+        return assertions;
+    }
+
+    private List<Assertion> getSlaAssertion(Config environmentConfig, String scenarioName) {
+        var assertions = new ArrayList<Assertion>();
+        var workflowSla = 5000;
+
+        assertions.add(details(scenarioName).responseTime().percentile4().lte(workflowSla));
+        return assertions;
+    }
+
+    private List<Assertion> addAssertions() {
+        List<Assertion> assertions = new ArrayList<>(getSuccessAssertions(config.get()));
+
+        for (var plan : testPlanLoader.getTestPlan().getPlans()) {
+            for (var scenario : plan.getScenarios()) {
+                if (!"Warmup".equalsIgnoreCase(scenario.getName())) {
+                    assertions.addAll(getSlaAssertion(config.get(), scenario.getName()));
+                }
+            }
+        }
+
+        return assertions;
+    }
+
+    @Override
+    protected @NonNull List<BaseReceiver> getReceivers() {
+        return List.of(consumer);
+    }
+
+    @Override
+    protected @NonNull List<BaseSender> getSenders() {
+        return List.of(producer);
+    }
+
+    @Override
+    protected Map<String, AbstractAsyncScenario> getScenarioMap() {
+        ScenarioFactory scenarioFactory = ScenarioFactory.getInstance(config, producer, consumer);
+
+        return scenarioFactory.getScenarioMap();
     }
 }

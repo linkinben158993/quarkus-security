@@ -9,3 +9,5 @@ pluginManagement {
     }
 }
 rootProject.name='security'
+include 'performance'
+

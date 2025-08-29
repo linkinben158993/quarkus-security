@@ -15,13 +15,19 @@ repositories {
     }
 }
 
+def reportDescription = "${rootProject.name}  --  " + System.getenv("REPORT_DESC")
+def simulation = 'com.linkinben.SecuritySimulation'
 tasks.register('runLoadTest', JavaExec) {
     description = "CI Performance-Test"
     environment = Map.of("GATLING_HOME", workingDir)
     systemProperties = System.getProperties() as Map<String, ?>
+    jvmArgs List.of('--add-opens', 'java.base/java.lang=ALL-UNNAMED')
     classpath = sourceSets.test.runtimeClasspath
     getMainClass().set "io.gatling.app.Gatling"
-    arg = Eval.me("['rd', '${reportDescription}' , '-s', ${simulation}']")
+    args = ['-s', "${simulation}",
+            '-rd', "${reportDescription}",
+            '-rf', "${workingDir}/build/reports/gatling"
+    ]
 }
 
 configurations {
@@ -52,9 +58,10 @@ dependencies {
             "org.apache.kafka:kafka-streams:3.2.0",
 
             "com.linkinben.gatling:gatling-java-learning:1.0.0-SNAPSHOT",
-            "io.gatling:gatling-app:3.9.5",
-            "io.gatling:gatling-core-java:3.9.5",
-            "io.gatling.highcharts:gatling-charts-highcharts:3.9.5",
+            "io.gatling:gatling-core:3.14.3",
+            "io.gatling:gatling-app:3.14.3",
+            "io.gatling:gatling-core-java:3.14.3",
+            "io.gatling.highcharts:gatling-charts-highcharts:3.14.3",
             "io.vavr:vavr:0.10.0",
             "org.scala-lang:scala-compiler:2.13.9",
             "org.scala-lang:scala-library:2.13.9",

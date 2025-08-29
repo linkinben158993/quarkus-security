@@ -1,0 +1,6 @@
+plans:
+  - name: default
+    totalTps: 100
+    scenarios:
+      - name: SecurityInputScenario
+        tps: 100

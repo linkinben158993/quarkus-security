@@ -7,7 +7,9 @@ import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.IntStream;
 
 @Path("/games")
 public class GreetingResource {
@@ -100,6 +102,57 @@ public class GreetingResource {
                                 .build())
                         .build())
                 .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
+    }
+
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response createGame(Games game) {
+        long id = games.stream().max(Comparator.comparingLong(Games::getId)).get().getId() + 1;
+        game.setId(id);
+        games.add(game);
+
+        return Response.ok("Games created").build();
+    }
+
+    @PATCH
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response updateGame(Games game) {
+        games.stream().filter(item -> item.getId().equals(game.getId())).findFirst().ifPresent(updated -> {
+            if (game.getName() != null && !game.getName().isEmpty()) {
+                updated.setName(game.getName());
+            }
+            if (game.getCategory() != null && !game.getCategory().isEmpty()) {
+                updated.setCategory(game.getCategory());
+            }
+        });
+
+        return Response.ok("Games updated").build();
+    }
+
+    @PUT
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response replaceGame(Games game) {
+        var index = IntStream.range(0, games.size())
+                .filter(i -> games.get(i).getId().equals(game.getId()))
+                .findFirst();
+        if (index.isPresent()) {
+            games.set(index.getAsInt(), game);
+        }
+
+        return Response.ok("Games list updated").build();
+    }
+
+    @DELETE
+    @Path("/{id}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response deleteGame(@PathParam("id") Long id) {
+        games.removeIf(item -> item.getId().equals(id));
+
+        return Response.ok("Game with id " + id + " deleted").build();
     }
 
     private List<Games> pagination(List<Games> games, int start, int end) {
