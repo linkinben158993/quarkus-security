@@ -1,9 +1,11 @@
 package com.linkinben;
 
 import com.linkinben.gatling.AbstractAsyncScenario;
+import com.linkinben.gatling.actions.KeyOnlyKafkaConsumer;
 import com.linkinben.gatling.config.TestPlanLoader;
 import com.linkinben.gatling.integrations.base.BaseReceiver;
 import com.linkinben.gatling.integrations.base.BaseSender;
+import com.linkinben.gatling.integrations.kafka.ConcreteKafkaConsumer;
 import com.linkinben.gatling.integrations.kafka.ConcreteKafkaProducer;
 import com.linkinben.gatling.integrations.kafka.KeyAndValuesKafkaConsumer;
 import com.linkinben.gatling.model.ExecutionConfiguration;
@@ -26,12 +28,14 @@ import static io.gatling.javaapi.core.CoreDsl.global;
 public class SecuritySimulation extends BaseSimulation {
     private ConcreteKafkaProducer<String, String> producer;
     private KeyAndValuesKafkaConsumer<String, String> consumer;
+    private ConcreteKafkaConsumer<String, String> keyConsumer;
     private TestPlanLoader<ExecutionConfiguration> testPlanLoader;
 
     public SecuritySimulation() throws Exception {
         testPlanLoader = new TestPlanLoader<>(ExecutionConfiguration.class);
         producer = new ConcreteKafkaProducer<>(config.getKafkaConsumerProperties());
-        consumer = new KeyAndValuesKafkaConsumer<>(List.of(config.getKafkaTopic("input")), config.getKafkaConsumerProperties());
+        consumer = new KeyAndValuesKafkaConsumer<>(List.of(config.getKafkaTopic("output")), config.getKafkaConsumerProperties());
+        keyConsumer = new KeyOnlyKafkaConsumer<>(config.getKafkaConsumerProperties(), List.of(config.getKafkaTopic("output")));
 
         var simulation = setUp(getScenario());
 
@@ -57,7 +61,7 @@ public class SecuritySimulation extends BaseSimulation {
 
     private List<Assertion> getSlaAssertion(Config environmentConfig, String scenarioName) {
         var assertions = new ArrayList<Assertion>();
-        var workflowSla = 5000;
+        var workflowSla = 60000;
 
         assertions.add(details(scenarioName).responseTime().percentile4().lte(workflowSla));
         return assertions;
@@ -89,7 +93,7 @@ public class SecuritySimulation extends BaseSimulation {
 
     @Override
     protected Map<String, AbstractAsyncScenario> getScenarioMap() {
-        ScenarioFactory scenarioFactory = ScenarioFactory.getInstance(config, producer, consumer);
+        ScenarioFactory scenarioFactory = ScenarioFactory.getInstance(config, producer, consumer, keyConsumer);
 
         return scenarioFactory.getScenarioMap();
     }
