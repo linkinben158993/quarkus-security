@@ -6,6 +6,9 @@ plugins {
 repositories {
     mavenCentral()
     mavenLocal()
+    maven {
+        url "https://packages.confluent.io/maven"
+    }
 }
 
 dependencies {
@@ -20,7 +23,8 @@ dependencies {
             "org.jboss.logging:commons-logging-jboss-logging",
             "org.jboss.logmanager:log4j-jboss-logmanager",
             "org.jboss.logmanager:log4j2-jboss-logmanager",
-            "org.jboss.slf4j:slf4j-jboss-logmanager"
+            "org.jboss.slf4j:slf4j-jboss-logmanager",
+
     )
 
     testImplementation(
@@ -33,7 +37,7 @@ dependencies {
     testAnnotationProcessor("org.projectlombok:lombok:1.18.38")
     annotationProcessor(
             "org.projectlombok:lombok:1.18.38",
-            "org.projectlombok:lombok-maptruct-binding:0.2.0",
+            "org.projectlombok:lombok-mapstruct-binding:0.2.0",
             "org.mapstruct:mapstruct-processor:1.5.5.Final"
     )
 }
