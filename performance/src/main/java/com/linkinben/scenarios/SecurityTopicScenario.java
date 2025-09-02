@@ -44,16 +44,18 @@ public abstract class SecurityTopicScenario extends AbstractAsyncScenario {
     public ScenarioBuilder getScenario(boolean warmup) {
         try {
             return scenario(scenarioName)
-                    .exec(kafkaToKafka(String.class, String.class)
+//                    .exec(kafkaToKafka(String.class, String.class)
+                    .exec(kafkaToKafkaCustomKeyActionV2(String.class, String.class, String.class, String.class)
                             .executor(getExecutor())
                             .name(scenarioName)
                             .kafkaProducer(producer)
-                            .kafkaConsumer(keyConsumer)
+//                            .kafkaConsumer(keyConsumer)
+                            .kafkaConsumer(consumer)
                             .inputTopic(getInputTopic())
                             .valueSupplier(getMessageValue())
-//                            .keyExtractor(key -> key)
+                            .keyExtractor(key -> key)
                             .keySupplier(getUuid())
-                            .maxTimeoutMs(Long.valueOf("30000"))
+                            .maxTimeoutMs(Long.valueOf("10000"))
                             .build());
 
         } catch (IOException e) {
