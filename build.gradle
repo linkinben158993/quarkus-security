@@ -25,6 +25,10 @@ dependencies {
             "org.jboss.logmanager:log4j2-jboss-logmanager",
             "org.jboss.slf4j:slf4j-jboss-logmanager",
 
+            // gRPC
+            "io.quarkus:quarkus-grpc",
+            "io.quarkus:quarkus-rest",
+            "io.quarkus:quarkus-arc"
     )
 
     testImplementation(

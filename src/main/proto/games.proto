@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option java_package = "com.linkinben.entity.grpc";
+
+service GamesService {
+    rpc GetGame(GameRequest) returns (GameResponse) {}
+}
+
+message GameRequest {
+    string gameId = 1; // Equals position of the request field gameId in GameRequest.
+}
+
+message GameResponse {
+    string id = 1;
+    string name = 2;
+    uint64 price = 3;
+    bool orderable = 4;
+}
