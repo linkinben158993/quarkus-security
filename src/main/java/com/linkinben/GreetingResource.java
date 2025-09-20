@@ -1,6 +1,6 @@
 package com.linkinben;
 
-import com.linkinben.entity.Games;
+import com.linkinben.entities.Games;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.NewCookie;

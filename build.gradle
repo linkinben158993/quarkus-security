@@ -9,6 +9,9 @@ repositories {
     maven {
         url "https://packages.confluent.io/maven"
     }
+    maven {
+        url "https://repo.akka.io/maven"
+    }
 }
 
 dependencies {
@@ -28,7 +31,11 @@ dependencies {
             // gRPC
             "io.quarkus:quarkus-grpc",
             "io.quarkus:quarkus-rest",
-            "io.quarkus:quarkus-arc"
+            "io.quarkus:quarkus-arc",
+
+            // Akka
+            "com.typesafe.akka:akka-actor-typed_2.13:2.10.9"
+
     )
 
     testImplementation(
